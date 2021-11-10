@@ -1,50 +1,65 @@
-﻿Shader "Unlit/Gooch" {
-    Properties {
-        _Albedo ("Albedo", Color) = (1, 1, 1, 1)
-    }
+﻿Shader "Custom/Gooch" {
 
-    SubShader {
+	Properties {
+		_Albedo ("Albedo", Color) = (1, 1, 1, 1)
+		_Smoothness ("Smoothness", Range(0.01, 1)) = 0.5
+	}
 
-        Pass {
-            CGPROGRAM
-            #pragma vertex vp
-            #pragma fragment fp
+	SubShader {
 
-            #include "UnityStandardBRDF.cginc"
+		Pass {
+			Tags {
+				"LightMode" = "ForwardBase"
+			}
 
-            struct VertexData {
-                float4 vertex : POSITION;
-                float3 normal : NORMAL;
-                //float2 uv : TEXCOORD0;
-            };
+			CGPROGRAM
 
-            struct v2f {
-                //float2 uv : TEXCOORD0;
-                float4 vertex : SV_POSITION;
-                float3 normal : TEXCOORD1;
-            };
+			#pragma vertex vp
+			#pragma fragment fp
 
-            float3 _Albedo;
+			#include "UnityPBSLighting.cginc"
 
-            v2f vp(VertexData v) {
-                v2f o;
+			float4 _Albedo;
 
-                o.vertex = UnityObjectToClipPos(v.vertex);
-                o.normal = UnityObjectToWorldNormal(v.normal);
+			float _Smoothness;
 
-                return o;
-            }
+			struct VertexData {
+				float4 position : POSITION;
+				float3 normal : NORMAL;
+				//float2 uv : TEXCOORD0;
+			};
 
-            fixed4 fp(v2f i) : SV_Target {
-                // sample the texture
+			struct v2f {
+				float4 position : SV_POSITION;
+				//float2 uv : TEXCOORD0;
+				float3 normal : TEXCOORD1;
+				float3 worldPos : TEXCOORD2;
+			};
+
+			v2f vp(VertexData v) {
+				v2f i;
+				i.position = UnityObjectToClipPos(v.position);
+				i.worldPos = mul(unity_ObjectToWorld, v.position);
+				i.normal = UnityObjectToWorldNormal(v.normal);
+				return i;
+			}
+
+			float4 fp(v2f i) : SV_TARGET {
+				i.normal = normalize(i.normal);
+				float3 lightDir = _WorldSpaceLightPos0.xyz;
+				float3 viewDir = normalize(_WorldSpaceCameraPos - i.worldPos);
                 float3 col = _Albedo.rgb;
 
-                i.normal = normalize(i.normal);
-                float light = DotClamped(_WorldSpaceLightPos0.xyz, i.normal);
+                float3 diffuse = col * DotClamped(lightDir, i.normal);
 
-                return float4(col * light, 1);
-            }
-            ENDCG
-        }
-    }
+                float3 reflectionDir = reflect(-lightDir, i.normal);
+                float3 specular = DotClamped(viewDir, reflectionDir);
+                specular = pow(specular, _Smoothness * 100);
+
+                return float4(diffuse + specular, 1.0f);
+			}
+
+			ENDCG
+		}
+	}
 }
