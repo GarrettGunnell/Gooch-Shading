@@ -50,19 +50,19 @@
 
 			float4 fp(v2f i) : SV_TARGET {
 				i.normal = normalize(i.normal);
-				float3 lightDir = _WorldSpaceLightPos0.xyz;
+				float3 lightDir = normalize(float3(1, 1, 0));
 				float3 viewDir = normalize(_WorldSpaceCameraPos - i.worldPos);
 
                 float3 reflectionDir = reflect(-lightDir, i.normal);
                 float3 specular = DotClamped(viewDir, reflectionDir);
-                specular = pow(specular, _Smoothness * 100);
+                specular = pow(specular, _Smoothness * 500);
 
 				float goochDiffuse = (1.0f + dot(lightDir, i.normal)) / 2.0f;
 
 				float3 kCool = _Cool.rgb + _Alpha * _Albedo.rgb;
 				float3 kWarm = _Warm.rgb + _Beta * _Albedo.rgb;
 
-				float3 gooch = goochDiffuse * kCool + (1 - goochDiffuse) * kWarm;
+				float3 gooch = (goochDiffuse * kWarm) + ((1 - goochDiffuse) * kCool);
 
                 return float4(gooch + specular, 1.0f);
 			}
