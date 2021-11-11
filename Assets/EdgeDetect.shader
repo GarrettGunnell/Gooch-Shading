@@ -30,24 +30,33 @@
             }
 
             sampler2D _MainTex, _CameraDepthTexture;
+            float4 _CameraDepthTexture_TexelSize;
 
             fixed4 fp(v2f i) : SV_Target {
                 int x, y;
                 fixed4 col = tex2D(_MainTex, i.uv);
                 float depth = tex2D(_CameraDepthTexture, i.uv);
                 depth = Linear01Depth(depth);
+            
+                float depths;
 
-                float depth = 0.0f;
 
+                float n = Linear01Depth(tex2D(_CameraDepthTexture, i.uv + _CameraDepthTexture_TexelSize * float2(0, 1)).r);
+                float e = Linear01Depth(tex2D(_CameraDepthTexture, i.uv + _CameraDepthTexture_TexelSize * float2(1, 0)).r);
+                float s = Linear01Depth(tex2D(_CameraDepthTexture, i.uv + _CameraDepthTexture_TexelSize * float2(0, -1)).r);
+                float w = Linear01Depth(tex2D(_CameraDepthTexture, i.uv + _CameraDepthTexture_TexelSize * float2(-1, 0)).r);
+                float ne = Linear01Depth(tex2D(_CameraDepthTexture, i.uv + _CameraDepthTexture_TexelSize * float2(1, 1)).r);
+                float nw = Linear01Depth(tex2D(_CameraDepthTexture, i.uv + _CameraDepthTexture_TexelSize * float2(-1, 1)).r);
+                float se = Linear01Depth(tex2D(_CameraDepthTexture, i.uv + _CameraDepthTexture_TexelSize * float2(1, -1)).r);
+                float sw = Linear01Depth(tex2D(_CameraDepthTexture, i.uv + _CameraDepthTexture_TexelSize * float2(-1, -1)).r);
 
-                for (x = -1; x <= 1; ++x) {
-                    for (y = -1; y <= 1; ++y) {
-                        if (x == 0 && y == 0) continue;
+                if (n - s > 0.1 || w - e > 0.1 || e - w > 0.1 || s - n > 0.1)
+                    col = 0.0f;
+                
+                if (nw - se > 0.1 || ne - sw > 0.1 || se - nw > 0.1 || sw - ne > 0.1)
+                    col = 0.0f;
 
-                    }
-                }
-
-                return depth;
+                return col;
             }
             ENDCG
         }
