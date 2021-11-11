@@ -13,7 +13,7 @@
 
 		Pass {
 			Tags {
-				"LightMode" = "ForwardBase"
+				"RenderType" = "Opaque"
 			}
 
 			CGPROGRAM
@@ -69,5 +69,44 @@
 
 			ENDCG
 		}
+
+		Pass {
+            Tags {
+				"LightMode" = "ShadowCaster"
+			}
+ 
+            CGPROGRAM
+            #pragma vertex vp
+            #pragma fragment fp
+
+            #include "UnityCG.cginc"
+ 
+			struct VertexData {
+				float4 vertex : POSITION;
+				float3 normal : NORMAL;
+				float2 uv : TEXCOORD0;
+			};
+
+            struct v2f {
+                float4 pos : SV_POSITION;
+				float2 uv : TEXCOORD0;
+            };
+ 
+            v2f vp(VertexData v) {
+                v2f o;
+
+				o.pos = UnityClipSpaceShadowCasterPos(v.vertex.xyz, v.normal);
+				o.pos = UnityApplyLinearShadowBias(o.pos);
+				o.uv = v.uv;
+
+                return o;
+            }
+ 
+            float4 fp(v2f i) : SV_Target {
+                return 0;
+            }
+
+            ENDCG
+        }
 	}
 }
