@@ -52,15 +52,10 @@
 				i.normal = normalize(i.normal);
 				float3 lightDir = _WorldSpaceLightPos0.xyz;
 				float3 viewDir = normalize(_WorldSpaceCameraPos - i.worldPos);
-                float3 col = _Albedo.rgb;
-
-                float3 diffuse = col * DotClamped(lightDir, i.normal);
 
                 float3 reflectionDir = reflect(-lightDir, i.normal);
                 float3 specular = DotClamped(viewDir, reflectionDir);
                 specular = pow(specular, _Smoothness * 100);
-
-				float3 litColor = diffuse + specular;
 
 				float goochDiffuse = (1.0f + dot(lightDir, i.normal)) / 2.0f;
 
