@@ -5,6 +5,8 @@
 		_Smoothness ("Smoothness", Range(0.01, 1)) = 0.5
 		_Warm ("Warm", Color) = (1, 1, 1, 1)
 		_Cool ("Cool", Color) = (1, 1, 1, 1)
+		_Alpha ("Alpha", Range(0.01, 1)) = 0.5
+		_Beta ("Beta", Range(0.01, 1)) = 0.5
 	}
 
 	SubShader {
@@ -23,7 +25,7 @@
 
 			float4 _Albedo, _Warm, _Cool;
 
-			float _Smoothness;
+			float _Smoothness, _Alpha, _Beta;
 
 			struct VertexData {
 				float4 position : POSITION;
@@ -58,7 +60,16 @@
                 float3 specular = DotClamped(viewDir, reflectionDir);
                 specular = pow(specular, _Smoothness * 100);
 
-                return float4(diffuse + specular, 1.0f);
+				float3 litColor = diffuse + specular;
+
+				float goochDiffuse = (1.0f + dot(lightDir, i.normal)) / 2.0f;
+
+				float3 kCool = _Cool.rgb + _Alpha * _Albedo.rgb;
+				float3 kWarm = _Warm.rgb + _Beta * _Albedo.rgb;
+
+				float3 gooch = goochDiffuse * kCool + (1 - goochDiffuse) * kWarm;
+
+                return float4(gooch + specular, 1.0f);
 			}
 
 			ENDCG
