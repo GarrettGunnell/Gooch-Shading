@@ -3,6 +3,8 @@
 	Properties {
 		_Albedo ("Albedo", Color) = (1, 1, 1, 1)
 		_Smoothness ("Smoothness", Range(0.01, 1)) = 0.5
+		_Warm ("Warm", Color) = (1, 1, 1, 1)
+		_Cool ("Cool", Color) = (1, 1, 1, 1)
 	}
 
 	SubShader {
@@ -19,7 +21,7 @@
 
 			#include "UnityPBSLighting.cginc"
 
-			float4 _Albedo;
+			float4 _Albedo, _Warm, _Cool;
 
 			float _Smoothness;
 
